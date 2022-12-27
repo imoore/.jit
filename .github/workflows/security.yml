@@ -7,15 +7,15 @@ on:
           required: true
 jobs:
   secret-detection:
-    if: contains( fromJSON(github.event.inputs.client_payload).payload.control_ids, '8ff8b60d-88ad-4bff-b3ae-7fcd6546f8a1') || fromJSON(github.event.inputs.client_payload).payload.workflow_job_name == 'secret-detection'
-    runs-on: ubuntu-latest
+    if: fromJSON(github.event.inputs.client_payload).payload.workflow_job_name == 'secret-detection'
+    runs-on: ubuntu-20.04
     steps:
-    - name: secrets-detection
+    - name: gitleaks
       uses: jitsecurity-controls/jit-github-action@v1.7
       with:
         docker_user: jit-bot
         docker_password: ${{fromJSON(github.event.inputs.client_payload).payload.container_registry_token}}
         security_control: ghcr.io/jitsecurity-controls/control-gitleaks-alpine:latest
-        security_control_args: detect --config \$GITLEAKS_CONFIG_FILE_PATH --source /code -v --report-format json --report-path /tmp/report.json --redact --no-git --exit-code 0
+        security_control_args: detect --config \$GITLEAKS_CONFIG_FILE_PATH --source \${WORK_DIR:-.} -v --report-format json --report-path \$REPORT_FILE --redact --no-git --exit-code 0
         security_control_output_file: /tmp/report.json
         dispatch_type: workflow
